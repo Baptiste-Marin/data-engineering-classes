@@ -3,8 +3,6 @@ name: Test Docker Deployment
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   docker-build-and-test:
@@ -20,6 +18,8 @@ jobs:
 
     - name: Start Docker services
       run: |
+        apt update
+        apt install -y docker-compose
         docker-compose up -d
         # Wait for services to be healthy
         timeout 60s bash -c 'until docker-compose ps | grep -q "healthy"; do sleep 1; done'
