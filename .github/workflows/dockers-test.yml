@@ -34,7 +34,12 @@ jobs:
 
     # Tester la connexion depuis un conteneur vers un autre
     - name: Check connection between containers
-      run: docker exec -i node-app ping kafka
+      run: |
+        docker exec -i node-app bash
+        sudo apt update
+        sudo apt upgrade
+        sudo apt install -y iputils-ping
+        ping kafka
 
     # Tester si les messages sont bien publié sur le topic
     - name: Check publishing messages
