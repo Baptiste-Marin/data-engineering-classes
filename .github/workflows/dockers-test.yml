@@ -1,0 +1,37 @@
+name: Test Docker Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker-build-and-test:
+    runs-on : ubuntu-latest
+
+    steps:
+    # Vérifie le code source
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Configure Docker pour github action
+    - name: Set up Docker buildx
+      uses: docker/setup-buildx-action@v2
+
+    # Construire les Docker à partir du docker-compose.yml
+    - name: Build docker compose Services
+      run: docker-compose -f docker-compose.yml up -d 
+
+    # Tester si les conteneurs fonctionnent
+    - name: Check running containers
+      run: docker ps
+
+    # Tester si les messages sont bien publié sur le topic
+    - name: Check publishing messages
+      run: |
+        docker exec -it kafka kafka-topics --describe --topic pacemaker-data --bootstrap-server kafka:9092
+
+    # Nettoyer après le test
+    - name: Tear down docker compose
+      if: always()
+      run: docker-compose -f docker-compose.yml down
