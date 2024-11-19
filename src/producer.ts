@@ -34,4 +34,5 @@ async function startProducer() {
 }
 
 console.log("Producer started");
+console.log();
 startProducer().catch(console.error);
