@@ -32,6 +32,10 @@ jobs:
     - name: Check running containers
       run: docker ps
 
+    # Tester la connexion depuis un conteneur vers un autre
+    - name: Check connection between containers
+      run: docker exec -i node-app ping kafka
+
     # Tester si les messages sont bien publié sur le topic
     - name: Check publishing messages
       run: |
