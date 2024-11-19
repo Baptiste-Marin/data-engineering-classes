@@ -13,6 +13,12 @@ jobs:
     # Vérifie le code source
     - name: Checkout code
       uses: actions/checkout@v3
+    
+    # Insaller docker-compose
+    - name: Install docker-compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
 
     # Configure Docker pour github action
     - name: Set up Docker buildx
