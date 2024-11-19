@@ -2,50 +2,66 @@ name: Test Docker Deployment
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   docker-build-and-test:
-    runs-on : ubuntu-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-    # Vérifie le code source
     - name: Checkout code
       uses: actions/checkout@v3
-    
-    # Insaller docker-compose
-    - name: Install docker-compose
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y docker-compose
 
-    # Configure Docker pour github action
-    - name: Set up Docker buildx
+    - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    # Construire les Docker à partir du docker-compose.yml
-    - name: Build docker compose Services
-      run: docker-compose -f docker-compose.yml up -d 
-
-    # Tester si les conteneurs fonctionnent
-    - name: Check running containers
+    - name: Start Docker services
       run: |
-        docker ps
+        docker-compose up -d
+        # Wait for services to be healthy
+        timeout 60s bash -c 'until docker-compose ps | grep -q "healthy"; do sleep 1; done'
+
+    - name: Verify containers status
+      run: |
+        echo "Checking running containers..."
+        docker-compose ps
+        echo "Container logs..."
+        docker-compose logs
+
+    - name: Test Kafka connectivity
+      run: |
+        # Wait for Kafka to be ready
+        timeout 30s bash -c 'until docker exec kafka kafka-topics.sh --list --bootstrap-server kafka:9092 &>/dev/null; do sleep 1; done'
+        
+        # Create test topic
+        docker exec kafka kafka-topics.sh --create --if-not-exists \
+          --bootstrap-server kafka:9092 \
+          --topic test-topic \
+          --partitions 1 \
+          --replication-factor 1
+
+        # List topics to verify
+        docker exec kafka kafka-topics.sh --list --bootstrap-server kafka:9092
+
+    - name: Test Node.js app connectivity
+      run: |
+        # Wait for Node app to be ready
+        timeout 30s bash -c 'until docker exec node-app curl -s http://localhost:3000/health &>/dev/null; do sleep 1; done'
+        
+        # Test connection to Kafka from Node app
+        docker exec node-app curl -v telnet://kafka:9092
+
+    - name: Network inspection
+      run: |
+        echo "Network configuration:"
+        docker network ls
         docker network inspect data-engineering-classes_kafka-net
 
-    # Tester la connexion depuis un conteneur vers un autre
-    - name: Check connection between containers
-      run: |
-        docker exec -i node-app bash
-        curl http://kafka:9092
-
-    # Tester si les messages sont bien publié sur le topic
-    - name: Check publishing messages
-      run: |
-        docker exec -i kafka kafka-topics --list --bootstrap-server kafka:9092
-
-    # Nettoyer après le test
-    - name: Tear down docker compose
+    - name: Cleanup
       if: always()
-      run: docker-compose -f docker-compose.yml down
+      run: |
+        docker-compose down -v
+        docker system prune -f
