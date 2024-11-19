@@ -22,7 +22,7 @@ jobs:
 
     # Configure Docker pour github action
     - name: Set up Docker buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
 
     # Construire les Docker à partir du docker-compose.yml
     - name: Build docker compose Services
