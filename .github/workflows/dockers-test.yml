@@ -38,9 +38,7 @@ jobs:
     - name: Check connection between containers
       run: |
         docker exec -i node-app bash
-        sudo apt update
-        sudo apt install -y iputils-ping
-        ping 172.18.0.4
+        curl http://kafka:9092
 
     # Tester si les messages sont bien publié sur le topic
     - name: Check publishing messages
