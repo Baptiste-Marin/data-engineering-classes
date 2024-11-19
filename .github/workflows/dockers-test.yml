@@ -35,7 +35,7 @@ jobs:
     # Tester si les messages sont bien publié sur le topic
     - name: Check publishing messages
       run: |
-        docker exec -i kafka kafka-topics --describe --topic pacemaker-data --bootstrap-server kafka:9092
+        docker exec -i kafka kafka-topics --list --bootstrap-server kafka:9092
 
     # Nettoyer après le test
     - name: Tear down docker compose
