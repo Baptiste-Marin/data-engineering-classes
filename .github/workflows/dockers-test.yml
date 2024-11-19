@@ -18,8 +18,8 @@ jobs:
 
     - name: Start Docker services
       run: |
-        apt update
-        apt install -y docker-compose
+        sudo apt update
+        sudo apt install -y docker-compose
         docker-compose up -d
         # Wait for services to be healthy
         timeout 60s bash -c 'until docker-compose ps | grep -q "healthy"; do sleep 1; done'
