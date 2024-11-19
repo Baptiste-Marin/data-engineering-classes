@@ -30,7 +30,9 @@ jobs:
 
     # Tester si les conteneurs fonctionnent
     - name: Check running containers
-      run: docker ps
+      run: |
+        docker ps
+        docker network inspect kafka-net
 
     # Tester la connexion depuis un conteneur vers un autre
     - name: Check connection between containers
